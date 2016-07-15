@@ -1,7 +1,6 @@
 ﻿IMPORT ML;
-IMPORT * FROM $;
-IMPORT $.Mat;
-IMPORT * FROM ML.Types;
+IMPORT ML.Mat;
+IMPORT ML.Types;
 IMPORT PBblas;
 Layout_Cell := PBblas.Types.Layout_Cell;
 Layout_Part := PBblas.Types.Layout_Part;
@@ -542,7 +541,7 @@ EXPORT NeuralNetworks (DATASET(Types.DiscreteField) net,UNSIGNED4 prows=0, UNSIG
       GS := SORT(d_grpd, conf);
       S := GROUP(GS); // Ungrouped GS
       SeqRec := RECORD
-      l_result;
+      ML.Types.l_result;
       INTEGER8 Sequence := 0;
       END;
       //add seq field to S
@@ -552,7 +551,7 @@ EXPORT NeuralNetworks (DATASET(Types.DiscreteField) net,UNSIGNED4 prows=0, UNSIG
       END;
       Sseq := PROJECT(S, AddS(LEFT,COUNTER),LOCAL);
       classified := Sseq (Sseq.Sequence=0);
-      RETURN PROJECT(classified,l_result,LOCAL);
+      RETURN PROJECT(classified,ML.Types.l_result,LOCAL);
     END; // END NNClassify
   
 END;//END NeuralNetworks

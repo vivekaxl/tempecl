@@ -1,5 +1,4 @@
-IMPORT * FROM $;
-IMPORT Std.Str;
+﻿IMPORT Std.Str;
 
 EXPORT Associate(DATASET(Types.ItemElement) d,Types.t_Count M) := MODULE
 // This module perform frequent pattern mining
