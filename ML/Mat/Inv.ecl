@@ -10,4 +10,4 @@ Inverse(DATASET(ML_Mat.Types.Element) matrix) := FUNCTION
 	matrix_inverse := ML_Mat.Decomp.b_sub(u, fsub);
 	RETURN matrix_inverse;
 END;
-EXPORT Inv(DATASET(ML_Mat.Types.Element) matrix) := IF(Det(matrix)=0, DATASET([],ML_Mat.Types.Element), Inverse(matrix) );
+EXPORT Inv(DATASET(ML_Mat.Types.Element) matrix) := IF(ML_Mat.Det(matrix)=0, DATASET([],ML_Mat.Types.Element), Inverse(matrix) );

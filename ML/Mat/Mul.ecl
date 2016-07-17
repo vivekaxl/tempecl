@@ -19,7 +19,7 @@ Mul_Default(DATASET(ML_Mat.Types.Element) l,DATASET(ML_Mat.Types.Element) r) := 
 	END;
 	
 	// Combine all the parts back into a matrix - note if your matrices fit in memory on 1 node - FEW will help
-	T := IF(ML_Mat.Has(l).Stats.XMax*Has(r).Stats.YMax*sizeof(ML_Mat.Types.Element)>Config.MaxLookup, 
+	T := IF(ML_Mat.Has(l).Stats.XMax*ML_Mat.Has(r).Stats.YMax*sizeof(ML_Mat.Types.Element)>Config.MaxLookup, 
 				TABLE(J,Inter,x,y,MERGE), 
 				TABLE(J,Inter,x,y,FEW));
 
@@ -65,9 +65,9 @@ END;
 EXPORT Mul(DATASET(ML_Mat.Types.Element) l,DATASET(ML_Mat.Types.Element) r, MulMethod method=MulMethod.Default) := FUNCTION
 		StatsL := ML_Mat.Has(l).Stats;
 		StatsR := ML_Mat.Has(r).Stats;
-		SizeMatch := ~Strict OR (StatsL.YMax=StatsR.XMax);
+		SizeMatch := ~ML_Mat.Strict OR (StatsL.YMax=StatsR.XMax);
 		
-		assertCondition := ~(Debug AND ~SizeMatch);	
+		assertCondition := ~(ML_Mat.Debug AND ~SizeMatch);	
 		checkAssert := ASSERT(assertCondition, 'Mul FAILED - Size mismatch', FAIL);		
 		result := IF(SizeMatch, IF(method=MulMethod.Default, Mul_Default(l,r), Mul_SymmetricResult(l,r)),DATASET([], ML_Mat.Types.Element));
 		RETURN WHEN(result, checkAssert);

@@ -7,11 +7,11 @@ EXPORT Ensemble := MODULE
 
   // Splitting Results Data Structures
   EXPORT gSplitD := RECORD
-    Trees.SplitD;
+    ML.Trees.SplitD;
     ML.Types.t_Count       group_id;     // Tree Number Identifier
   END;
   EXPORT gSplitC := RECORD
-    Trees.SplitC;
+    ML.Trees.SplitC;
     ML.Types.t_Count       group_id;     // Tree Number Identifier
   END;
   
@@ -36,7 +36,7 @@ EXPORT Ensemble := MODULE
   END;
 
   // Learning TRANSFORMs and FUNCTIONs - Internal
-  SHARED DepGroupedRec GroupDepRecords (ML.Types.DiscreteField l, Sampling.idListGroupRec r) := TRANSFORM
+  SHARED DepGroupedRec GroupDepRecords (ML.Types.DiscreteField l, ML.Sampling.idListGroupRec r) := TRANSFORM
     SELF.group_id := r.gNum;
     SELF.new_id   := r.id;
     SELF          := l;
@@ -54,12 +54,12 @@ EXPORT Ensemble := MODULE
     raw_set    := ENTH(allSorted, K, M, 1);
     RETURN TABLE(raw_set, {gNum, number});
   END;
-  SHARED ML.Types.DiscreteField GetDRecords(ML.Types.DiscreteField l, Sampling.idListGroupRec r) := TRANSFORM
+  SHARED ML.Types.DiscreteField GetDRecords(ML.Types.DiscreteField l, ML.Sampling.idListGroupRec r) := TRANSFORM
     SELF.id := r.id;
     SELF.number := l.number;
     SELF.value := l.value;
   END;  
-  SHARED gNodeInstDisc init(ML.Types.DiscreteField dep, Sampling.idListGroupRec depG) := TRANSFORM
+  SHARED gNodeInstDisc init(ML.Types.DiscreteField dep, ML.Sampling.idListGroupRec depG) := TRANSFORM
     SELF.group_id := depG.gNum;
     SELF.node_id  := depG.gNum;
     SELF.level    := 1;
@@ -80,7 +80,7 @@ EXPORT Ensemble := MODULE
     totFeat := COUNT(Indep(id=N));  // Number of Features of Training Dataset
     depth   := MIN(255, maxLevel);  // Max number of iterations when building trees (max 256 levels)
     // Sampling with replacement the original dataset to generate treeNum Datasets
-    grList0   := Sampling.GenerateNSampleList(treeNum, N); // the number of records will be N * treeNum
+    grList0   := ML.Sampling.GenerateNSampleList(treeNum, N); // the number of records will be N * treeNum
     dgrLstOld := DISTRIBUTE(grList0  , HASH32(oldId));
     dDep      := DISTRIBUTE(Dep      , HASH32(id));
     dIndep    := DISTRIBUTE(Indep    , HASH32(id));
@@ -169,7 +169,7 @@ EXPORT Ensemble := MODULE
     totFeat := COUNT(Indep(id=N)); // Number of Features
     depth   := MIN(255, maxLevel); // Max number of iterations when building trees (max 256 levels)
     // sampling with replacement the original dataset to generate treeNum Datasets
-    gNodeInstDisc init(ML.Types.DiscreteField dep, Sampling.idListGroupRec depG) := TRANSFORM
+    gNodeInstDisc init(ML.Types.DiscreteField dep, ML.Sampling.idListGroupRec depG) := TRANSFORM
       SELF.group_id := depG.gNum;
       SELF.node_id  := depG.gNum;
       SELF.level    := 1;
@@ -178,7 +178,7 @@ EXPORT Ensemble := MODULE
       SELF.value    := Dep.value;
       SELF.depend   := Dep.value;
     END;
-    grList0   := Sampling.GenerateNSampleList(treeNum, N); // the number of records will be N * treeNum
+    grList0   := ML.Sampling.GenerateNSampleList(treeNum, N); // the number of records will be N * treeNum
     dgrLstOld := DISTRIBUTE(grList0  , HASH32(oldId));
     dDep      := DISTRIBUTE(Dep      , HASH32(Id));
     depG      := JOIN(dDep, dgrLstOld, LEFT.id = RIGHT.oldId, init(LEFT, RIGHT), LOCAL);
@@ -298,8 +298,8 @@ EXPORT Ensemble := MODULE
     RETURN o;
   END;
   EXPORT ToDiscreteForest(DATASET(gSplitD) nodes) := FUNCTION
-    AppendID(nodes, id, model);
-    ToField(model, out_model, id, modelD_fields);
+    ML.AppendID(nodes, id, model);
+    ML.ToField(model, out_model, id, modelD_fields);
     RETURN out_model;
   END;
   // Function that locates instances into the deepest branch nodes (split) based on their attribute values
@@ -522,8 +522,8 @@ EXPORT Ensemble := MODULE
     RETURN new_nodes + maxlevel_leafs;
   END;
   EXPORT ToContinuosForest(DATASET(gSplitC) nodes) := FUNCTION
-    AppendID(nodes, id, model);
-    ToField(model, out_model, id, modelC_fields);
+    ML.AppendID(nodes, id, model);
+    ML.ToField(model, out_model, id, modelC_fields);
     RETURN out_model;
   END;
   EXPORT FromContinuosForest(DATASET(ML.Types.NumericField) mod) := FUNCTION

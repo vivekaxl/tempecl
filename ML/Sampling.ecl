@@ -2,6 +2,7 @@
 IMPORT ML.Types;
 IMPORT ML.Mat;
 IMPORT ML.Mat.Vec AS Vec;
+IMPORT ML.Utils AS Utils;
 //	The purpose of this module is to implement Sampling methods
 //	used to generate samples from an original dataset.
 

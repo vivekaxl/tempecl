@@ -668,12 +668,12 @@ EXPORT Trees := MODULE
 		RETURN C45PruneTree(raw_tree, testIndep, testDep);
 	END;
   EXPORT ToDiscreteTree(DATASET(SplitD) nodes) := FUNCTION
-    AppendID(nodes, id, model);
-    ToField(model, out_model, id, model_fields);
+    ML.AppendID(nodes, id, model);
+    ML.ToField(model, out_model, id, model_fields);
     RETURN out_model;
   END;
   EXPORT ModelD(DATASET(ML.Types.NumericField) mod) := FUNCTION
-    FromField(mod, SplitD,o, model_Map);
+    ML.FromField(mod, SplitD,o, model_Map);
     RETURN o;
   END;
   EXPORT ClassifyD(DATASET(ML.Types.DiscreteField) Indep,DATASET(ML.Types.NumericField) mod) := FUNCTION
@@ -892,8 +892,8 @@ EXPORT Trees := MODULE
     RETURN dedup1;
   END;
   EXPORT ToNumericTree(DATASET(SplitC) nodes) := FUNCTION
-    AppendID(nodes, id, model);
-    ToField(model, out_model, id, modelC_fields);
+    ML.AppendID(nodes, id, model);
+    ML.ToField(model, out_model, id, modelC_fields);
     RETURN out_model;
   END;
   EXPORT ModelC(DATASET(ML.Types.NumericField) mod) := FUNCTION

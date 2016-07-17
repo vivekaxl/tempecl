@@ -3,6 +3,8 @@ IMPORT ML.Mat;
 IMPORT ML.Types;
 IMPORT PBblas;
 IMPORT ML.SVM;
+IMPORT ML.Utils AS Utils;
+IMPORT ML.DMAT as DMAT;
 Layout_Cell := PBblas.Types.Layout_Cell;
 
 /*
@@ -268,7 +270,7 @@ END;
       PC := JOIN(PC_0, TotalFs, LEFT.C = RIGHT.C AND LEFT.class_number=RIGHT.class_number,form_TotalFs(LEFT,RIGHT),LOOKUP);   
       Pret := PROJECT(FC,TRANSFORM(BayesResultD, SELF.PC:=LEFT.w, SELF := LEFT))+PROJECT(PC,TRANSFORM(BayesResultD, SELF.PC:=LEFT.w, SELF.number:= 0,SELF:=LEFT));
       Pret1 := PROJECT(Pret,TRANSFORM(BayesResultD, SELF.PC := LogScale(LEFT.PC),SELF.id := Base+COUNTER,SELF := LEFT));
-      ToField(Pret1,o);
+      ML.ToField(Pret1,o);
       RETURN o;
     END;
     // Transform NumericFiled "mod" to discrete Naive Bayes format model "BayesResultD"
@@ -396,7 +398,7 @@ END;
       AC:= TABLE(Vals, AggregatedTriple, class_number, c, number);
       Pret := PROJECT(PC, TRANSFORM(BayesResultC, SELF.id := Base + COUNTER, SELF.number := 0, SELF:=LEFT)) +
               PROJECT(AC, TRANSFORM(BayesResultC, SELF.id := Base + COUNTER + PC_cnt, SELF.var:= LEFT.var*LEFT.support/(LEFT.support -1), SELF := LEFT));
-      ToField(Pret,o);
+      ML.ToField(Pret,o);
       RETURN o;
     END;
     // Transform NumericFiled "mod" to continuos Naive Bayes format model "BayesResultC"
@@ -627,7 +629,7 @@ END;
   */
   EXPORT NeuralNetworksClassifier (DATASET(ML.Types.DiscreteField) net, DATASET(Mat.Types.MUElement) IntW, DATASET(Mat.Types.MUElement) Intb, REAL8 LAMBDA=0.001, REAL8 ALPHA=0.1, UNSIGNED2 MaxIter=100, 
   UNSIGNED4 prows=0, UNSIGNED4 pcols=0, UNSIGNED4 Maxrows=0, UNSIGNED4 Maxcols=0) := MODULE(DEFAULT)
-  SHARED NN := NeuralNetworks(net, prows,  pcols, Maxrows,  Maxcols);
+  SHARED NN := ML.NeuralNetworks(net, prows,  pcols, Maxrows,  Maxcols);
   EXPORT LearnC(DATASET(ML.Types.NumericField) Indep, DATASET(ML.Types.DiscreteField) Dep) := FUNCTION
     Y := PROJECT(Dep,ML.Types.NumericField);
     groundTruth:= Utils.ToGroundTruth (Y);//groundTruth is a matrix that each column correspond to one sample
@@ -684,7 +686,7 @@ END;
     EXPORT LearnCS(DATASET(ML.Types.NumericField) Indep,DATASET(ML.Types.DiscreteField) Dep) := DATASET([], ML.Types.NumericField);
     EXPORT LearnC(DATASET(ML.Types.NumericField) Indep,DATASET(ML.Types.DiscreteField) Dep) := LearnCConcat(Indep,Dep,LearnCS);
     EXPORT Model(DATASET(ML.Types.NumericField) mod) := FUNCTION
-      FromField(mod,Logis_Model,o);
+      ML.FromField(mod,Logis_Model,o);
       RETURN o;
     END;  
     
@@ -865,7 +867,7 @@ END;
           SELF.Id := LEFT.Id,SELF.number := LEFT.number, 
           SELF.class_number := LEFT.class_number, SELF.w := LEFT.w, SELF.se := SQRT(RIGHT.value)));
           
-      ToField(Res,o);
+      ML.ToField(Res,o);
       EXPORT Mod := o;
       modelY_M := Mat.MU.From(BetaPair, mu_comp.Y);
       modelY_NF := Types.FromMatrix(modelY_M);
@@ -1134,7 +1136,7 @@ END;
                               SELF.class_number := LEFT.class_number, SELF.w := LEFT.w, SELF.se := SQRT(RIGHT.value)));
         RETURN ret;
       END;
-      ToField(Res,o);
+      ML.ToField(Res,o);
 
       EXPORT Mod := o;
       modelY_M := DMAT.Converted.FromPart2Elm(PBblas.MU.From(BetaPair, mu_comp.Y));
@@ -1477,7 +1479,7 @@ The model  is used to predict the class from new examples.
 */
     EXPORT C45(BOOLEAN Pruned= TRUE, INTEGER1 numFolds = 3, REAL z = 0.67449) := MODULE(DEFAULT)
       EXPORT LearnD(DATASET(ML.Types.DiscreteField) Indep, DATASET(ML.Types.DiscreteField) Dep) := FUNCTION
-        nodes := IF(Pruned, Trees.SplitsIGR_Pruned(Indep, Dep, numFolds, z), Trees.SplitsInfoGainRatioBased(Indep, Dep));
+        nodes := IF(Pruned, ML.Trees.SplitsIGR_Pruned(Indep, Dep, numFolds, z), ML.Trees.SplitsInfoGainRatioBased(Indep, Dep));
         RETURN ML.Trees.ToDiscreteTree(nodes);
       END;
       EXPORT ClassProbDistribD(DATASET(ML.Types.DiscreteField) Indep,DATASET(ML.Types.NumericField) mod) :=FUNCTION
@@ -1499,7 +1501,7 @@ The model  is used to predict the class from new examples.
 */
     EXPORT C45Binary(ML.Types.t_Count minNumObj=2, ML.Types.t_level maxLevel=32) := MODULE(DEFAULT)
       EXPORT LearnC(DATASET(ML.Types.NumericField) Indep, DATASET(ML.Types.DiscreteField) Dep) := FUNCTION
-        nodes := Trees.SplitBinaryCBased(Indep, Dep, minNumObj, maxLevel);
+        nodes := ML.Trees.SplitBinaryCBased(Indep, Dep, minNumObj, maxLevel);
         RETURN ML.Trees.ToNumericTree(nodes);
       END;
       EXPORT ClassifyC(DATASET(ML.Types.NumericField) Indep,DATASET(ML.Types.NumericField) mod) := FUNCTION
@@ -1534,14 +1536,14 @@ Configuration Input
     EXPORT LearnD(DATASET(ML.Types.DiscreteField) Indep, DATASET(ML.Types.DiscreteField) Dep) := FUNCTION
        noofIndependent := MAX(Indep, number);      
        Indepok := ASSERT(Indep, fsNum<noofIndependent, 'The number of features to consider when looking for the best split cannot be greater than total number of features', FAIL);
-      nodes := IF(GiniSplit, Ensemble.SplitFeatureSampleGI(Indepok, Dep, treeNum, fsNum, Purity, Depth), 
-                             Ensemble.SplitFeatureSampleIGR(Indepok, Dep, treeNum, fsNum, Depth));
+      nodes := IF(GiniSplit, ML.Ensemble.SplitFeatureSampleGI(Indepok, Dep, treeNum, fsNum, Purity, Depth), 
+                             ML.Ensemble.SplitFeatureSampleIGR(Indepok, Dep, treeNum, fsNum, Depth));
       RETURN ML.Ensemble.ToDiscreteForest(nodes);
     END;
     EXPORT LearnC(DATASET(ML.Types.NumericField) Indep, DATASET(ML.Types.DiscreteField) Dep) := FUNCTION
       noofIndependent := MAX(Indep, number); 
       Indepok := ASSERT(Indep, fsNum<noofIndependent, 'The number of features to consider when looking for the best split cannot be greater than total number of features', FAIL);
-      nodes := Ensemble.SplitFeatureSampleGIBin(Indepok, Dep, treeNum, fsNum, Purity, Depth);
+      nodes := ML.Ensemble.SplitFeatureSampleGIBin(Indepok, Dep, treeNum, fsNum, Purity, Depth);
       RETURN ML.Ensemble.ToContinuosForest(nodes);
     END;
     // Transform NumericFiled "mod" to Ensemble.gSplitF "discrete tree nodes" model format using field map model_Map
