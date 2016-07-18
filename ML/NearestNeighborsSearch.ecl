@@ -38,7 +38,7 @@ EXPORT NearestNeighborsSearch:= MODULE
       BOOLEAN BOB:=           FALSE;        // Bound Overlap Ball flag
       BOOLEAN isTerminal:=    FALSE;        // isTerminal flag
     END;
-    EXPORT KNNeighbors(DATASET(Types.NumericField) queryPointsData, DATASET(Trees.Node) KDTFullTree, DATASET(Trees.Node) KDTPartitioned, DATASET(Trees.sNode) KDTBoundaries) := FUNCTION
+    EXPORT KNNeighbors(DATASET(Types.NumericField) queryPointsData, DATASET(ML.Trees.Node) KDTFullTree, DATASET(ML.Trees.Node) KDTPartitioned, DATASET(ML.Trees.sNode) KDTBoundaries) := FUNCTION
       root:= KDTFullTree(node_id =1);
       queryPoints(DATASET(Types.NumericField) qp_ids):= FUNCTION
         seed:= DATASET([{0,0,99999999}], NN);
@@ -180,7 +180,7 @@ EXPORT NearestNeighborsSearch:= MODULE
     END;
     EXPORT SearchC(DATASET(Types.NumericField) indepData , DATASET(Types.NumericField) queryPointsData):= FUNCTION
       // Partition the space using KDTree
-      KDT:= Trees.KdTree(indepData, Depth, MedianDepth);
+      KDT:= ML.Trees.KdTree(indepData, Depth, MedianDepth);
       fulltree:= KDT.FullTree;
       Partitioned:= KDT.Partitioned;
       Boundaries:= KDT.Boundaries;

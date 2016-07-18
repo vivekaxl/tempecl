@@ -1,6 +1,4 @@
-﻿// Vivek: Naive Bayes Not working
-/*
-IMPORT ML;
+﻿IMPORT ML;
 
 // First create a regular 'ecl-style' record
 value_record := RECORD
@@ -35,7 +33,8 @@ ml.ToField(d,o);
 o1 := ML.Discretize.ByBucketing(o,5);
 Independents := o1(Number <= 3);
 Dependents := o1(Number >= 4);
-Bayes := ML.Classify.NaiveBayes.LearnD(Independents,Dependents);
+learner := ML.Classify.NaiveBayes();
+Bayes := learner.LearnD(Independents,Dependents);
 Bayes;
 // This selects all columns other than 2 - and all non-zero values from 2
 Better := o(Number<>2 OR Value<>0);
@@ -50,4 +49,3 @@ SELF.Value := LEFT.Value*LEFT.Value,
 SELF := LEFT) );
 NewO := BelowW+AboveW+NewCol;
 NewO;
-*/

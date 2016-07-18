@@ -1,5 +1,6 @@
 ﻿IMPORT ML;
 IMPORT ML.Mat;
+IMPORT ML.DMat AS DMAT;
 IMPORT PBblas;
 Layout_Cell := PBblas.Types.Layout_Cell;
 Layout_Part := PBblas.Types.Layout_Part;
@@ -11,16 +12,16 @@ EXPORT Sparse_Autoencoder_IntWeights (INTEGER4 NumberofFeatures, INTEGER4 Number
   {1, 1, NumberofFeatures},
   {2,1,NumberofHiddenLayerNodes},
   {3,1,NumberofFeatures}],
-  Types.DiscreteField);
-  RETURN NeuralNetworks(net).IntWeights;
+  ML.Types.DiscreteField);
+  RETURN ML.NeuralNetworks(net).IntWeights;
 END;
 EXPORT Sparse_Autoencoder_IntBias (INTEGER4 NumberofFeatures, INTEGER4 NumberofHiddenLayerNodes) := FUNCTION
   net := DATASET([
   {1, 1, NumberofFeatures},
   {2,1,NumberofHiddenLayerNodes},
   {3,1,NumberofFeatures}],
-  Types.DiscreteField);
-  RETURN NeuralNetworks(net).IntBias;
+  ML.Types.DiscreteField);
+  RETURN ML.NeuralNetworks(net).IntBias;
 END;
 
 //Implementation of the Sparse Autoencoder based on the stanford Deep Learning tutorial
@@ -40,8 +41,8 @@ END;
 // - Maxcols: an optional parameter used to set maximum cols allowed per block when using AutoBVMap
 EXPORT Sparse_Autoencoder (UNSIGNED4 prows=0, UNSIGNED4 pcols=0, UNSIGNED4 Maxrows=0, UNSIGNED4 Maxcols=0) := MODULE
   //this is a un-supervised learning algorithm, no need for the labled data
-  SHARED SA(DATASET(Types.NumericField) X, DATASET(Mat.Types.MUElement) IntW, DATASET(Mat.Types.MUElement) Intb, REAL8 BETA=0.1, REAL8 sparsityParam=0.1 , REAL8 LAMBDA=0.001, REAL8 ALPHA=0.1, UNSIGNED2 MaxIter=100) := MODULE
-    dt := Types.ToMatrix (X);
+  SHARED SA(DATASET(ML.Types.NumericField) X, DATASET(Mat.Types.MUElement) IntW, DATASET(Mat.Types.MUElement) Intb, REAL8 BETA=0.1, REAL8 sparsityParam=0.1 , REAL8 LAMBDA=0.001, REAL8 ALPHA=0.1, UNSIGNED2 MaxIter=100) := MODULE
+    dt := ML.Types.ToMatrix (X);
     dTmp := dt;
     SHARED d := Mat.Trans(dTmp); //in the entire of the calculations we work with the d matrix that each sample is presented in one column
     SHARED m := MAX (d, d.y); //number of samples
@@ -240,21 +241,21 @@ EXPORT Sparse_Autoencoder (UNSIGNED4 prows=0, UNSIGNED4 pcols=0, UNSIGNED4 Maxro
     SAprm3_mat_no := Mat.MU.TO(SAprm3_mat,3);
     SAprm4_mat_no := Mat.MU.TO(SAprm4_mat,4);
     SAprm_MUE := SAprm1_mat_no + SAprm2_mat_no + SAprm3_mat_no + SAprm4_mat_no;
-    AppendID(SAprm_MUE, id, SAprm_MUE_id);
-    ToField (SAprm_MUE_id, SAprm_MUE_out, id, 'x,y,value,no');
+    ML.AppendID(SAprm_MUE, id, SAprm_MUE_id);
+    ML.ToField (SAprm_MUE_id, SAprm_MUE_out, id, 'x,y,value,no');
     EXPORT Mod := SAprm_MUE_out;
   END;//END SA
-  EXPORT LearnC (DATASET(Types.NumericField) Indep,DATASET(Mat.Types.MUElement) IntW, DATASET(Mat.Types.MUElement) Intb, REAL8 BETA=0.1, REAL8 sparsityParam=0.1 , REAL8 LAMBDA=0.001, REAL8 ALPHA=0.1, UNSIGNED2 MaxIter=100) := SA(Indep,IntW,Intb, BETA,sparsityParam,LAMBDA, ALPHA,  MaxIter).mod;
-  EXPORT Model(DATASET(Types.NumericField) mod) := FUNCTION
+  EXPORT LearnC (DATASET(ML.Types.NumericField) Indep,DATASET(Mat.Types.MUElement) IntW, DATASET(Mat.Types.MUElement) Intb, REAL8 BETA=0.1, REAL8 sparsityParam=0.1 , REAL8 LAMBDA=0.001, REAL8 ALPHA=0.1, UNSIGNED2 MaxIter=100) := SA(Indep,IntW,Intb, BETA,sparsityParam,LAMBDA, ALPHA,  MaxIter).mod;
+  EXPORT Model(DATASET(ML.Types.NumericField) mod) := FUNCTION
     modelD_Map :=	DATASET([{'id','ID'},{'x','1'},{'y','2'},{'value','3'},{'no','4'}], {STRING orig_name; STRING assigned_name;});
-    FromField(mod,Mat.Types.MUElement,dOut,modelD_Map);
+    ML.FromField(mod,Mat.Types.MUElement,dOut,modelD_Map);
     RETURN dOut;
   END;//END Model
-  EXPORT SAOutput(DATASET(Types.NumericField) Indep,DATASET(Types.NumericField) mod) :=FUNCTION
+  EXPORT SAOutput(DATASET(ML.Types.NumericField) Indep,DATASET(ML.Types.NumericField) mod) :=FUNCTION
     //Take the same steps in the FeedForward fucntions to calculate the output of the SparseAutoencoder
     X := Indep;
     Inputmod:= Model (mod);
-    dt := Types.ToMatrix (X);
+    dt := ML.Types.ToMatrix (X);
     dTmp := dt;
     d := Mat.Trans(dTmp); //in the entire of the calculations we work with the d matrix that each sample is presented in one column
     m := MAX (d, d.y); //number of samples
@@ -392,7 +393,7 @@ END;//END Sparse_Autoencoder
 //NumSAs : Number of SAs in the Deep Network, basically it means number of sparseautoencoders that need to stack up to make the deep network (the number of layers in the final Deep Learning models is
 //NumSAs+1 because we have the input layer as well
 //numHiddenNodes : number of hidden nodes in each Sparse Autoencoder
-EXPORT StackedSA (UNSIGNED4 NumSAs, DATASET(Types.DiscreteField) numHiddenNodes, REAL8 BETA, REAL8 sparsityParam , REAL8 LAMBDA=0.001, REAL8 ALPHA=0.1, UNSIGNED2 MaxIter=100,
+EXPORT StackedSA (UNSIGNED4 NumSAs, DATASET(ML.Types.DiscreteField) numHiddenNodes, REAL8 BETA, REAL8 sparsityParam , REAL8 LAMBDA=0.001, REAL8 ALPHA=0.1, UNSIGNED2 MaxIter=100,
   UNSIGNED4 prows=0, UNSIGNED4 pcols=0, UNSIGNED4 Maxrows=0, UNSIGNED4 Maxcols=0) := MODULE
   NL := NumSAs+1;//number of layers in the final Deep Learning algorithm is 1 (input layer) + Number of SparseAutoencoders
   SSA (DATASET(ML.Types.NumericField) X) := MODULE
@@ -442,8 +443,8 @@ EXPORT StackedSA (UNSIGNED4 NumSAs, DATASET(Types.DiscreteField) numHiddenNodes,
       //RETURN SAmodelL + MM + PROJECT (IntWL,Addno(LEFT,100)) + PROJECT (IntbL,Addno(LEFT,200));//the line I used to test the second SA's output with MATLAB code
     END;//END StackedSA_Step
     EXPORT SSA_prm := LOOP(SAmodel1 + MatrixOutput1No, COUNTER <= NumSAs-1, StackedSA_Step(ROWS(LEFT),COUNTER));//SSA_prm is in Mat.Types.MUElement format convert it to NumericFieldFormat
-    AppendID(SSA_prm, id, SSA_prm_id);
-    ToField (SSA_prm_id, mm, id, 'x,y,value,no');//convert the learnt model to numerifield before returning it
+    ML.AppendID(SSA_prm, id, SSA_prm_id);
+    ML.ToField (SSA_prm_id, mm, id, 'x,y,value,no');//convert the learnt model to numerifield before returning it
     EXPORT Mod := mm;
   END;//END SSA
   //LearnC returns the learnt model from Stacking up of SparseAutoencoders when some unsupervised data (Indep) are fed to it
@@ -459,20 +460,20 @@ EXPORT StackedSA (UNSIGNED4 NumSAs, DATASET(Types.DiscreteField) numHiddenNodes,
   //no={NL-1,NL+NL-1}: weight and bias belong to the second NL-1th SA
   EXPORT Model(DATASET(ML.Types.NumericField) mod) := FUNCTION
     modelD_Map :=	DATASET([{'id','ID'},{'x','1'},{'y','2'},{'value','3'},{'no','4'}], {STRING orig_name; STRING assigned_name;});
-    FromField(mod,Mat.Types.MUElement,dOut,modelD_Map);
+    ML.FromField(mod,Mat.Types.MUElement,dOut,modelD_Map);
     RETURN dOut;
   END;//END Model
   EXPORT SSAOutput(DATASET(ML.Types.NumericField) Indep,DATASET(ML.Types.NumericField) LearntMod) :=FUNCTION
     //The leartn model has the same format aa a model which is learnt by using NeuralNetwork.ecl
     //so we only need to feed this model and the input data to the NeuralNetwork.ecl to get the output
-    Types.DiscreteField Addid (Types.DiscreteField l) := TRANSFORM
+    ML.Types.DiscreteField Addid (ML.Types.DiscreteField l) := TRANSFORM
       SELF.id := l.id+1;
       SELF := l;
     END;
     NF := MAX (Indep, Indep.number);
-    firstlayer := DATASET([{1, 1, NF}],Types.DiscreteField);//add the input layer information to the numHiddenNodes (numHiddenNodes only includes the SAs inforamtion)
+    firstlayer := DATASET([{1, 1, NF}],ML.Types.DiscreteField);//add the input layer information to the numHiddenNodes (numHiddenNodes only includes the SAs inforamtion)
     NNnet := firstlayer + PROJECT(numHiddenNodes,Addid(LEFT));
-    NN := NeuralNetworks(NNnet,prows, pcols, Maxrows,  Maxcols);
+    NN := ML.NeuralNetworks(NNnet,prows, pcols, Maxrows,  Maxcols);
     RR :=NN.NNOutput(Indep,LearntMod);
     RETURN RR;
   END;
